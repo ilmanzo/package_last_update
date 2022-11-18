@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+import subprocess
+import argparse
+
+APIURL = "https://api.opensuse.org"
+MAINPROJECT = "openSUSE:Factory"
+###
+
+OSC_CMD = ['osc', '--apiurl', APIURL]
+
+
+def exec_process(cmdline):
+    return subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
+
+
+def get_last_changes(package):
+    try:
+        proc = exec_process(
+            OSC_CMD+["ls", "-l", f"{MAINPROJECT}/{package}"])
+        for line in proc.stdout.readlines():
+            if f"{package}.changes" not in line:
+                continue
+            return line.split()[3:6]
+    except:
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog='last update',
+        description='tells you when a package was last updated',
+    )
+    parser.add_argument(
+        'package', help='the package name to check (ex bash, vim ...)')
+    args = parser.parse_args()
+    changes = get_last_changes(args.package)
+    if changes:
+        print(args.package, "was last updated on", MAINPROJECT,
+              ' '.join(get_last_changes(args.package)))
+    else:
+        print("Error in getting information. Does this package exist?")
+
+
+main()
