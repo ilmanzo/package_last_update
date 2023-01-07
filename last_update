@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 import subprocess
 import argparse
+import requests
 
 APIURL = "https://api.opensuse.org"
 MAINPROJECT = "openSUSE:Factory"
 ###
 
 OSC_CMD = ['osc', '--apiurl', APIURL]
+
+REPOLOGY_APIURL = 'https://repology.org/api/v1/project/'
 
 
 def exec_process(cmdline):
@@ -25,6 +28,26 @@ def get_last_changes(package):
         return None
 
 
+def get_obs_version(package):
+    try:
+        proc = exec_process(
+            OSC_CMD+["cat", f"{MAINPROJECT}/{package}/{package}.spec"]
+        )
+        for line in proc.stdout.readlines():
+            if "Version:" in line:
+                return line.split()[1]
+    except:
+        return None
+
+
+def get_repology_version(package, refversion):
+    try:
+        response = requests.get(f"{REPOLOGY_APIURL}/{package}")
+        return [r for r in response.json() if r['status'] == 'newest' and r['version'] != refversion]
+    except:
+        return None
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog='last update',
@@ -33,12 +56,18 @@ def main():
     parser.add_argument(
         'package', help='the package name to check (ex bash, vim ...)')
     args = parser.parse_args()
+    obs_version = get_obs_version(args.package)
     changes = get_last_changes(args.package)
-    if changes:
-        print(args.package, "was last updated on", MAINPROJECT,
-              ' '.join(get_last_changes(args.package)))
+    if obs_version:
+        print(args.package, "last version on", MAINPROJECT,
+              "is", obs_version, "changed on", ' '.join(changes))
     else:
         print("Error in getting information. Does this package exist?")
+    repology_versions = get_repology_version(args.package, obs_version)
+    if repology_versions:
+        print("Other repos may have newer versions, consider updating!")
+    else:
+        print("No newer versions found in other repositories")
 
 
 main()
