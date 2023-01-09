@@ -2,6 +2,7 @@
 import subprocess
 import argparse
 import requests
+import re
 
 APIURL = "https://api.opensuse.org"
 MAINPROJECT = "openSUSE:Factory"
@@ -25,7 +26,11 @@ def get_last_changes(package):
                 continue
             return line.split()[3:6]
     except:
-        return None
+        return []
+
+
+def is_numeric(version: str) -> bool:
+    return re.search(r"^\d+", version)
 
 
 def get_obs_version(package):
@@ -35,12 +40,17 @@ def get_obs_version(package):
         )
         for line in proc.stdout.readlines():
             if "Version:" in line:
-                return line.split()[1]
+                version = line.split()[1]
+                break
+        if is_numeric(version):
+            return version
+        else:
+            return ""
     except:
-        return None
+        return ""
 
 
-def get_repology_version(package, refversion):
+def is_newer_on_repology(package, refversion):
     try:
         response = requests.get(f"{REPOLOGY_APIURL}/{package}")
         return [r for r in response.json() if r['status'] == 'newest' and r['version'] != refversion]
@@ -58,16 +68,13 @@ def main():
     args = parser.parse_args()
     obs_version = get_obs_version(args.package)
     changes = get_last_changes(args.package)
-    if obs_version:
-        print(args.package, "last version on", MAINPROJECT,
-              "is", obs_version, "changed on", ' '.join(changes))
-    else:
+    if not changes:
         print("Error in getting information. Does this package exist?")
-    repology_versions = get_repology_version(args.package, obs_version)
-    if repology_versions:
+        return
+    print(args.package, "last version on", MAINPROJECT,
+          "is", obs_version, "changed on", ' '.join(changes))
+    if is_numeric(obs_version) and is_newer_on_repology(args.package, obs_version):
         print("Other repos may have newer versions, consider updating!")
-    else:
-        print("No newer versions found in other repositories")
 
 
 main()
