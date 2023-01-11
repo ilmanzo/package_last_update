@@ -3,6 +3,9 @@ import subprocess
 import argparse
 import requests
 import re
+import pprint
+from cmp_version import VersionString
+
 
 APIURL = "https://api.opensuse.org"
 MAINPROJECT = "openSUSE:Factory"
@@ -50,12 +53,24 @@ def get_obs_version(package: str) -> str:
         return ""
 
 
-def is_newer_on_repology(package: str, refversion: str) -> int:
+def filter_repo(items: list[dict], refversion: str) -> list[dict]:
+    # uses some heuristic to create a list of only entries with a newer version
+    # on any parsing issue, returns the original list
     try:
-        response = requests.get(f"{REPOLOGY_APIURL}/{package}")
-        return len([r for r in response.json() if r['status'] == 'newest' and r['version'] != refversion])
-    except:
-        return 0
+        refv = VersionString(refversion)
+        return list(filter(lambda x: refv < VersionString(x['version']), items))
+    except ValueError:
+        return items
+
+
+def is_newer_on_repology(package: str, refversion: str) -> int:
+    response = requests.get(f"{REPOLOGY_APIURL}/{package}")
+    results = [r for r in response.json() if r['status'] ==
+               'newest' and r['version'] != refversion]
+    # if the version is numeric, try to compare and filter out the one lesser
+    if is_numeric(refversion):
+        results = filter_repo(results, refversion)
+    return len(results)
 
 
 def main():

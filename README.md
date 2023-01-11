@@ -23,4 +23,6 @@ so you can decide which packages needs to take care of :)
 
 ## requirements:
 - a working configuration of [osc](https://en.opensuse.org/openSUSE:OSC), with authentication setup
+- `pip3 install requests types-requests cmp_version`
+
 
