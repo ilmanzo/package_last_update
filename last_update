@@ -81,12 +81,14 @@ def main():
     parser.add_argument(
         'package', help='the package name to check (ex bash, vim ...)')
     args = parser.parse_args()
+    print(f"- {args.package} ", end="")
     obs_version = get_obs_version(args.package)
     changes = get_last_changes(args.package)
     if not changes:
-        print("Error in getting information. Does this package exist?")
+        print("Error in getting information. Does this package exist in Factory ?")
         return
-    print(f"- {args.package} last version on {MAINPROJECT} is {obs_version} changed on {' '.join(changes)}")
+    print(
+        f"last version on {MAINPROJECT} is {obs_version} changed on {' '.join(changes)}")
     repo_with_new_packages = is_newer_on_repology(args.package, obs_version)
     if is_numeric(obs_version) and repo_with_new_packages:
         print(
