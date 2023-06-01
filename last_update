@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 import subprocess
 import argparse
-import requests
 import re
+import requests
+
 from cmp_version import VersionString
 from datetime import datetime
 date_format = "%b %d %Y"
@@ -134,7 +135,7 @@ def main():
     parser.add_argument(
         'package', help='the package name to check (ex bash, vim ...)')
     parser.add_argument(
-        '-m', '--machine', help='Use meachine processable outout instead of human readable',  action='store_true')
+        '-m', '--machine', help='Use machine processable output instead of human readable',  action='store_true')
     args = parser.parse_args()
     outputStr = f"- {args.package} "
     changes = get_last_changes(args.package)
@@ -152,9 +153,9 @@ def main():
     repo_with_new_packages = is_newer_on_repology(args.package, obs_version)
     if is_numeric(obs_version) and repo_with_new_packages:
         if args.machine:
-            outputStr += f" "
+            outputStr += " "
         else:
-            outputStr += f"\n"
+            outputStr += "\n"
         outputStr += f"Other {repo_with_new_packages} repos may have newer versions, consider updating!"
     return outputStr
 
