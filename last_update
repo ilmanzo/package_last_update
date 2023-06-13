@@ -7,6 +7,8 @@ import requests
 
 from cmp_version import VersionString
 
+
+## TODO make these configurable via cli
 APIURL = "https://api.opensuse.org"
 MAINPROJECT = "openSUSE:Factory"
 ###
