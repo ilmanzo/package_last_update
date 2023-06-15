@@ -134,4 +134,7 @@ def main():
         outputStr += f"Other {repo_with_new_packages} repos may have newer versions"
     return outputStr
 
-print(main())
+
+# when imported as module, do not run
+if __name__ == '__main__':
+    print(main())

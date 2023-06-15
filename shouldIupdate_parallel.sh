@@ -16,6 +16,6 @@ fi
 
 for p in $(echo "$packages" | cut -d '/' -f 2)
 do 
-  ./last_update $p &
+  ./last_update.py $p &
 done
 wait

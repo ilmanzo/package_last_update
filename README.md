@@ -21,6 +21,11 @@ so you can decide which packages needs to take care of :)
     - kicad last version on openSUSE:Factory is 6.0.9 changed on Nov 05 2022
       Other 33 repos may have newer versions, consider updating!
 
+## how to run tests:
+
+    $ python3 -m unittest tests/*.py
+
+
 ## requirements:
 - a working configuration of [osc](https://en.opensuse.org/openSUSE:OSC), with authentication setup
 - rpmspec binary (provided by openSUSE package rpm-build)  
