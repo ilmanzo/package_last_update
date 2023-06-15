@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime
 from last_update import convert_to_epoch
 
+
 class TestEpochParsing(unittest.TestCase):
 
     def test_date_with_year(self):
@@ -14,6 +15,7 @@ class TestEpochParsing(unittest.TestCase):
 
     def test_invalid_date(self):
         self.assertIsNone(convert_to_epoch('foobar'))
+
 
 if __name__ == '__main__':
     unittest.main()
