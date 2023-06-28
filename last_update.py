@@ -3,6 +3,7 @@ import subprocess
 import argparse
 import re
 from datetime import datetime
+from shutil import which
 import requests
 
 from cmp_version import VersionString
@@ -107,6 +108,14 @@ def is_newer_on_repology(package: str, refversion: str) -> int:
         return """Sorry, we could not establish a connection to repology.org.
         Please make sure that you are connected to the internet and try again"""
 
+def cli_tools_installed():
+    "uses shutil.which to check if the program is in path"
+    for tool in ('osc','rpmspec'):
+        path = which(tool)
+        if path is None:
+            return False
+    return True
+
 
 def main():
     "program entry point"
@@ -121,6 +130,8 @@ def main():
         action='store_true')
     args = parser.parse_args()
     output_str = f"- {args.package} "
+    if not cli_tools_installed():
+        return "Error, missing one of required tools: 'osc / rpmspec'. Please install and be sure to have in $PATH"
     changes = get_last_changes(args.package)
     if not changes:
         output_str += "Error in getting information. Does this package exist in Factory ?"
