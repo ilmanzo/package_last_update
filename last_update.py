@@ -11,7 +11,7 @@ from cmp_version import VersionString
 
 # TODO make these configurable via cli
 APIURL = "https://api.opensuse.org"
-MAINPROJECT = "openSUSE:Factory"
+
 # 
 
 OSC_CMD = ['osc', '--apiurl', APIURL]
@@ -46,11 +46,11 @@ def convert_to_epoch(timestamp):
     return epoch_time
 
 
-def get_last_changes(package: str):
+def get_last_changes(mainproject: str, package: str):
     "parse project to get last changes modification date"
     try:
         proc = exec_process(
-            OSC_CMD+["ls", "-l", f"{MAINPROJECT}/{package}"])
+            OSC_CMD+["ls", "-l", f"{mainproject}/{package}"])
         for line in proc.stdout.readlines():
             if f"{package}.changes" not in line:
                 continue
@@ -64,11 +64,11 @@ def is_numeric(version: str) -> bool:
     return re.search(r"^\d+", version) is not None
 
 
-def get_obs_version(package: str) -> str:
+def get_obs_version(mainproject: str, package: str) -> str:
     "query spec file in obs for the package version"
     try:
         osc = exec_process(
-            OSC_CMD+["cat", f"{MAINPROJECT}/{package}/{package}.spec"]
+            OSC_CMD+["cat", f"{mainproject}/{package}/{package}.spec"]
         )
         rpmspec = subprocess.check_output(
             ('rpmspec', '-q', '/dev/stdin', '--queryformat=%{VERSION} '),
@@ -120,28 +120,32 @@ def cli_tools_installed():
 def main():
     "program entry point"
     parser = argparse.ArgumentParser(
-        prog='last update',
+        prog='last_update.py',
         description='tells you when a package was last updated',
     )
-    parser.add_argument(
-        'package', help='the package name to check (ex bash, vim ...)')
-    parser.add_argument(
-        '-m', '--machine', help='Use machine processable output instead of human readable', 
-        action='store_true')
+    parser.add_argument('package',
+                        help='the package name to check (ex bash, vim ...)')
+    parser.add_argument('-m', '--machine',
+                        help='Use machine processable output instead of human readable',
+                        action='store_true')
+    parser.add_argument('-p', '--project',
+                        help="The root/base project where to find the package, [default=openSUSE:Factory]",
+                        default="openSUSE:Factory")
     args = parser.parse_args()
+    mainproject = args.project
     output_str = f"- {args.package} "
     if not cli_tools_installed():
         return "Error, missing one of required tools: 'osc / rpmspec'. Please install and be sure to have in $PATH"
-    changes = get_last_changes(args.package)
+    changes = get_last_changes(mainproject, args.package)
     if not changes:
-        output_str += "Error in getting information. Does this package exist in Factory ?"
+        output_str += f"Error in getting information. Does this package exist in {mainproject} ?"
         return output_str
     else:
-        obs_version = get_obs_version(args.package)
+        obs_version = get_obs_version(mainproject, args.package)
         changes = ' '.join(changes)
         if args.machine:
             changes = convert_to_epoch(changes)
-        output_str += f"on {MAINPROJECT} is {obs_version} changed on {changes}"
+        output_str += f"on {mainproject} is {obs_version} changed on {changes}"
 
     repo_with_new_packages = is_newer_on_repology(args.package, obs_version)
     if is_numeric(obs_version) and repo_with_new_packages:

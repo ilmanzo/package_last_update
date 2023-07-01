@@ -21,6 +21,9 @@ so you can decide which packages needs to take care of :)
     - kicad last version on openSUSE:Factory is 6.0.9 changed on Nov 05 2022
       Other 33 repos may have newer versions, consider updating!
 
+    ./last_update.py coreutils -p Base:System         
+    - coreutils on Base:System is 9.3 changed on Apr 20 09:26
+
 ## how to run tests:
 
     $ python3 -m unittest tests/*.py
