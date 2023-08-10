@@ -105,19 +105,19 @@ def is_newer_on_repology(package: str, refversion: str) -> int:
             results = filter_repo(results, refversion)
         return len(results)
     except requests.exceptions.RequestException:
-        return """Sorry, we could not establish a connection to repology.org.
-        Please make sure that you are connected to the internet and try again"""
+        return -1 
+
 
 def cli_tools_installed():
     "uses shutil.which to check if the program is in path"
-    for tool in ('osc','rpmspec'):
+    for tool in ('osc', 'rpmspec'):
         path = which(tool)
         if path is None:
             return False
     return True
 
 
-def main():
+def main() -> str:
     "program entry point"
     parser = argparse.ArgumentParser(
         prog='last_update.py',
@@ -148,7 +148,10 @@ def main():
         output_str += f"on {mainproject} is {obs_version} changed on {changes}"
 
     repo_with_new_packages = is_newer_on_repology(args.package, obs_version)
-    if is_numeric(obs_version) and repo_with_new_packages:
+    if repo_with_new_packages < 0:
+        return """Sorry, we could not establish a connection to repology.org.
+        Please make sure that you are connected to the internet and try again"""
+    if is_numeric(obs_version) and repo_with_new_packages > 0:
         if args.machine:
             output_str += " "
         else:
