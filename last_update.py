@@ -4,6 +4,8 @@ import argparse
 import re
 from datetime import datetime
 from shutil import which
+from tempfile import TemporaryDirectory
+from os import chdir
 import requests
 
 from cmp_version import VersionString
@@ -66,18 +68,21 @@ def is_numeric(version: str) -> bool:
 
 def get_obs_version(mainproject: str, package: str) -> str:
     "query spec file in obs for the package version"
+    spec = package+'.spec'
     try:
-        osc = exec_process(
-            OSC_CMD+["cat", f"{mainproject}/{package}/{package}.spec"]
-        )
-        rpmspec = subprocess.check_output(
-            ('rpmspec', '-q', '/dev/stdin', '--queryformat=%{VERSION} '),
-            stdin=osc.stdout,  stderr=subprocess.DEVNULL, encoding='utf8')
-        osc.wait()
-        version = str(rpmspec).split()[0]
-        if is_numeric(version):
-            return version
-        return "_VERSION_"
+        with TemporaryDirectory() as tmpdir:
+            chdir(tmpdir)
+            subprocess.run(
+                OSC_CMD+["co", mainproject, package, spec],
+                check=True, timeout=30
+            )
+            rpmspec = subprocess.check_output(
+                ('rpmspec', '-q', spec, '--queryformat=%{VERSION} '),
+                 stderr=subprocess.DEVNULL, encoding='utf8')
+            version = str(rpmspec).split()[0]
+            if is_numeric(version):
+                return version
+            return "_VERSION_"
 
     except Exception as exc:
         print(f"Error in getting version from OBS: {exc}")
