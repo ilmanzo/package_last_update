@@ -1,1 +1,1 @@
-shouldIupdate_serial.sh
+shouldIupdate_parallel.sh
