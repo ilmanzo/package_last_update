@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from os import chdir
 import requests
 
-from cmp_version import VersionString
+from semantic_version import Version
 
 
 # TODO make these configurable via cli
@@ -93,8 +93,8 @@ def filter_repo(items: list[dict], refversion: str) -> list[dict]:
     """uses some heuristic to create a list of only entries with a newer version
        on any parsing issue, returns the original list"""
     try:
-        refv = VersionString(refversion)
-        return list(filter(lambda x: refv < VersionString(x['version']), items))
+        refv = Version(refversion)
+        return list(filter(lambda x: refv < Version(x['version']), items))
     except ValueError:
         return items
 
