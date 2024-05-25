@@ -8,7 +8,8 @@ from tempfile import TemporaryDirectory
 from os import chdir
 import requests
 
-from semantic_version import Version
+import packaging
+import packaging.version
 
 
 # TODO make these configurable via cli
@@ -78,7 +79,7 @@ def get_obs_version(mainproject: str, package: str) -> str:
             )
             rpmspec = subprocess.check_output(
                 ('rpmspec', '-q', spec, '--queryformat=%{VERSION} '),
-                 stderr=subprocess.DEVNULL, encoding='utf8')
+                stderr=subprocess.DEVNULL, encoding='utf8')
             version = str(rpmspec).split()[0]
             if is_numeric(version):
                 return version
@@ -93,23 +94,24 @@ def filter_repo(items: list[dict], refversion: str) -> list[dict]:
     """uses some heuristic to create a list of only entries with a newer version
        on any parsing issue, returns the original list"""
     try:
-        refv = Version(refversion)
-        return list(filter(lambda x: refv < Version(x['version']), items))
+      refv = packaging.version.parse(refversion)
+      return list(filter(lambda x: refv < packaging.version.parse(x['version']), items))
     except ValueError:
-        return items
+      return items
 
 
 def is_newer_on_repology(package: str, refversion: str) -> int:
     "query repology.org API to get same named packaged with newer version"
     try:
-        response = requests.get(f"{REPOLOGY_APIURL}/{package}",timeout=30)
+        response = requests.get(f"{REPOLOGY_APIURL}/{package}", timeout=30)
         results = [r for r in response.json() if r['status'] ==
                    'newest' and r['version'] != refversion]
         # if the version is numeric, try to compare and filter out the one lesser
         if is_numeric(refversion):
             results = filter_repo(results, refversion)
         return len(results)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        print("Error:", repr(e))
         return -1 
 
 

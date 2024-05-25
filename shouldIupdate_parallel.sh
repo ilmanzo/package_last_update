@@ -18,5 +18,5 @@ if [[ "$packages" == *Name\ or\ service\ not\ known* ]]; then
   exit 2
 fi
 
-echo "$packages" | cut -d '/' -f 2 | parallel -j 4 './last_update.py'
+echo "$packages" | cut -d '/' -f 2 | parallel -j 2 './last_update.py'
 
