@@ -1,6 +1,10 @@
 #!/bin/bash
 #osc my packages
 
+echo "Sorry, parallel bulk API requests are deprecated"
+exit
+
+
 if ! command -v osc &> /dev/null; then
   echo "Error: The 'osc' command is not available. Please install it and try again later."
   exit 1
@@ -18,4 +22,5 @@ if [[ "$packages" == *Name\ or\ service\ not\ known* ]]; then
   exit 2
 fi
 
-echo "$packages" | cut -d '/' -f 2 | parallel -j 2 './last_update.py'
+
+#echo "$packages" | cut -d '/' -f 2 | parallel -j 2 './last_update.py'
