@@ -94,16 +94,21 @@ def filter_repo(items: list[dict], refversion: str) -> list[dict]:
     """uses some heuristic to create a list of only entries with a newer version
        on any parsing issue, returns the original list"""
     try:
-      refv = packaging.version.parse(refversion)
-      return list(filter(lambda x: refv < packaging.version.parse(x['version']), items))
+        refv = packaging.version.parse(refversion)
+        return list(filter(lambda x: refv < packaging.version.parse(x['version']), items))
     except ValueError:
-      return items
+        return items
 
 
 def is_newer_on_repology(package: str, refversion: str) -> int:
     "query repology.org API to get same named packaged with newer version"
     try:
-        response = requests.get(f"{REPOLOGY_APIURL}/{package}", timeout=30)
+        session = requests.Session()
+        # temp fake user agent until we figure out the rules needed for bulk API requests
+        # myua = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'}
+        myua = {'User-Agent': 'package_last_update https://github.com/ilmanzo/package_last_update'}
+        session.headers.update(myua)
+        response = session.get(f"{REPOLOGY_APIURL}{package}", timeout=30)
         results = [r for r in response.json() if r['status'] ==
                    'newest' and r['version'] != refversion]
         # if the version is numeric, try to compare and filter out the one lesser

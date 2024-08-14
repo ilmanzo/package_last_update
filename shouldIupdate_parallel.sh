@@ -19,4 +19,3 @@ if [[ "$packages" == *Name\ or\ service\ not\ known* ]]; then
 fi
 
 echo "$packages" | cut -d '/' -f 2 | parallel -j 2 './last_update.py'
-
