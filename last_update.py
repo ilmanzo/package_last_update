@@ -12,15 +12,10 @@ import packaging
 import packaging.version
 
 
-# TODO make these configurable via cli
-APIURL = "https://api.opensuse.org"
-
-# 
-
-OSC_CMD = ['osc', '--apiurl', APIURL]
+# default OBS instance API URL
+OBSAPIURL = "https://api.opensuse.org"
 
 REPOLOGY_APIURL = 'https://repology.org/api/v1/project/'
-
 
 def exec_process(cmdline: list[str]):
     "helper to execute external process"
@@ -49,11 +44,11 @@ def convert_to_epoch(timestamp):
     return epoch_time
 
 
-def get_last_changes(mainproject: str, package: str):
+def get_last_changes(osc_cmd: list[str], mainproject: str, package: str):
     "parse project to get last changes modification date"
     try:
         proc = exec_process(
-            OSC_CMD+["ls", "-l", f"{mainproject}/{package}"])
+            osc_cmd+["ls", "-l", f"{mainproject}/{package}"])
         for line in proc.stdout.readlines():
             if f"{package}.changes" not in line:
                 continue
@@ -67,14 +62,14 @@ def is_numeric(version: str) -> bool:
     return re.search(r"^\d+", version) is not None
 
 
-def get_obs_version(mainproject: str, package: str) -> str:
+def get_obs_version(osc_cmd: list[str], mainproject: str, package: str) -> str:
     "query spec file in obs for the package version"
     spec = package+'.spec'
     try:
         with TemporaryDirectory() as tmpdir:
             chdir(tmpdir)
             subprocess.run(
-                OSC_CMD+["co", mainproject, package, spec],
+                osc_cmd+["co", mainproject, package, spec],
                 check=True, timeout=30
             )
             rpmspec = subprocess.check_output(
@@ -128,9 +123,7 @@ def cli_tools_installed():
             return False
     return True
 
-
-def main() -> str:
-    "program entry point"
+def parse_args():
     parser = argparse.ArgumentParser(
         prog='last_update.py',
         description='tells you when a package was last updated',
@@ -143,17 +136,25 @@ def main() -> str:
     parser.add_argument('-p', '--project',
                         help="The root/base project where to find the package, [default=openSUSE:Factory]",
                         default="openSUSE:Factory")
-    args = parser.parse_args()
+    parser.add_argument('--apiurl', default=OBSAPIURL,
+                        help='the OBS instance to query [default=https://api.opensuse.org]')
+    return parser.parse_args()
+
+
+def main() -> str:
+    "program entry point"
+    args = parse_args()
     mainproject = args.project
+    osc_cmd = ['osc', '--apiurl', args.apiurl]
     output_str = f"- {args.package} "
     if not cli_tools_installed():
         return "Error, missing one of required tools: 'osc / rpmspec'. Please install and be sure to have in $PATH"
-    changes = get_last_changes(mainproject, args.package)
+    changes = get_last_changes(osc_cmd, mainproject, args.package)
     if not changes:
         output_str += f"Error in getting information. Does this package exist in {mainproject} ?"
         return output_str
     else:
-        obs_version = get_obs_version(mainproject, args.package)
+        obs_version = get_obs_version(osc_cmd, mainproject, args.package)
         changes = ' '.join(changes)
         if args.machine:
             changes = convert_to_epoch(changes)
