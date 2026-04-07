@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+import os
+# Suppress all warnings in this process and all subprocesses
+os.environ["PYTHONWARNINGS"] = "ignore"
+
+import warnings
+warnings.simplefilter("ignore")
+
 import subprocess
 import argparse
 import re

@@ -1,4 +1,5 @@
 #!/bin/bash
+export PYTHONWARNINGS="ignore"
 #osc my packages
 
 echo "Sorry, parallel bulk API requests are deprecated"

@@ -1,4 +1,5 @@
 #!/bin/bash
+export PYTHONWARNINGS="ignore"
 #
 MAINPROJECT=openSUSE:Factory
 test -f packages.txt || osc --apiurl https://api.opensuse.org ls $MAINPROJECT > packages.txt
