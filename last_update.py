@@ -77,7 +77,9 @@ def get_obs_version(osc_cmd: list[str], mainproject: str, package: str) -> str:
             chdir(tmpdir)
             subprocess.run(
                 osc_cmd+["co", mainproject, package, spec],
-                check=True, timeout=30
+                check=True, timeout=30,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
             )
             rpmspec = subprocess.check_output(
                 ('rpmspec', '-q', spec, '--queryformat=%{VERSION} '),
