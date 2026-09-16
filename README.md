@@ -27,8 +27,9 @@ release), so you can decide which packages need attention :)
 Use `--anitya-distro` to change the release-monitoring.org distribution name
 (default: `openSUSE`; e.g. `openSUSE Tumbleweed`, `openSUSE Leap`).
 
-Exit codes: 0 ok, 1 missing osc/rpmspec, 2 package not found, 3 network error.
-(A release-monitoring.org failure only warns — it never changes the exit code.)
+Exit codes: 0 ok, 1 missing osc/rpmspec, 2 package not found.
+(repology.org and release-monitoring.org are optional cross-checks: either one
+being unreachable only warns to stderr, it never changes the exit code.)
 
 ## how to run tests:
 

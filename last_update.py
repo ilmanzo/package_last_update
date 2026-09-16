@@ -28,7 +28,6 @@ USER_AGENT = "package_last_update https://github.com/ilmanzo/package_last_update
 EXIT_OK = 0
 EXIT_MISSING_TOOLS = 1
 EXIT_NOT_FOUND = 2
-EXIT_NETWORK = 3
 
 
 def convert_to_epoch(timestamp: str, now: datetime | None = None) -> int | None:
@@ -124,8 +123,7 @@ def is_newer_on_repology(package: str, refversion: str) -> tuple[int, str | None
         # only try to compare/filter when the reference version is numeric
         if is_numeric(refversion):
             results = filter_repo(results, refversion)
-    except requests.exceptions.RequestException as e:
-        print("Error:", repr(e), file=sys.stderr)
+    except requests.exceptions.RequestException:
         return -1, None
     if not results:
         return 0, None
@@ -196,9 +194,8 @@ def run(args: argparse.Namespace) -> int:
     changes_str = " ".join(changes)
     count, newest = is_newer_on_repology(args.package, obs_version)
     if count < 0:
-        print("Error: could not reach repology.org. "
-              "Check your connection and retry.", file=sys.stderr)
-        return EXIT_NETWORK
+        print(f"Warning: could not reach repology.org for '{args.package}', "
+              "skipping that check.", file=sys.stderr)
 
     has_newer = is_numeric(obs_version) and count > 0
 
