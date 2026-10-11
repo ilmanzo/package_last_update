@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Report when an openSUSE OBS package last changed and whether newer versions
-exist elsewhere (queried via repology.org)."""
+exist elsewhere (queried via Repology)."""
 import sys
 import json
 import subprocess
@@ -17,7 +17,8 @@ __version__ = "1.1.0"
 
 # default OBS instance API URL
 OBSAPIURL = "https://api.opensuse.org"
-REPOLOGY_APIURL = "https://repology.org/api/v1/project/"
+REPOLOGY_BASE_URL = "https://repology.org"
+REPOLOGY_APIURL = f"{REPOLOGY_BASE_URL}/api/v1/project/"
 ANITYA_APIURL = "https://release-monitoring.org/api/v2/packages/"
 ANITYA_DISTRO = "openSUSE"
 
@@ -111,7 +112,7 @@ def filter_repo(items: list[dict], refversion: str) -> list[dict]:
 
 
 def is_newer_on_repology(package: str, refversion: str) -> tuple[int, str | None]:
-    """query repology.org for same-named packages that are newer.
+    """query Repology for same-named packages that are newer.
        returns (count, highest_newer_version) or (-1, None) on connection error."""
     try:
         session = requests.Session()
@@ -194,7 +195,7 @@ def run(args: argparse.Namespace) -> int:
     changes_str = " ".join(changes)
     count, newest = is_newer_on_repology(args.package, obs_version)
     if count < 0:
-        print(f"Warning: could not reach repology.org for '{args.package}', "
+        print(f"Warning: could not reach {REPOLOGY_BASE_URL} for '{args.package}', "
               "skipping that check.", file=sys.stderr)
 
     has_newer = is_numeric(obs_version) and count > 0

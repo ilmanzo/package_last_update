@@ -2,7 +2,7 @@
 An utility to get informations about a package last update
 
 It reports the OBS version and last-change date, then cross-checks two upstream
-sources: [repology.org](https://repology.org) (versions across many distros) and
+sources: [repology.amdmi3.ru](https://repology.amdmi3.ru) (versions across many distros) and
 [release-monitoring.org](https://release-monitoring.org) (Anitya, the latest upstream
 release), so you can decide which packages need attention :)
 
@@ -28,7 +28,7 @@ Use `--anitya-distro` to change the release-monitoring.org distribution name
 (default: `openSUSE`; e.g. `openSUSE Tumbleweed`, `openSUSE Leap`).
 
 Exit codes: 0 ok, 1 missing osc/rpmspec, 2 package not found.
-(repology.org and release-monitoring.org are optional cross-checks: either one
+(Repology and release-monitoring.org are optional cross-checks: either one
 being unreachable only warns to stderr, it never changes the exit code.)
 
 ## how to run tests:
