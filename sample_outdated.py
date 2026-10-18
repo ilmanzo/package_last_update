@@ -9,12 +9,17 @@ import argparse
 import json
 import os
 import random
+import shutil
 import subprocess
 import sys
 from datetime import datetime
 
 from last_update import (
-    cli_tools_installed, get_last_changes, convert_to_epoch, OBSAPIURL, ANITYA_DISTRO,
+    ANITYA_DISTRO,
+    OBSAPIURL,
+    cli_tools_installed,
+    convert_to_epoch,
+    get_last_changes,
 )
 
 LAST_UPDATE_PY = os.path.join(os.path.dirname(os.path.abspath(__file__)), "last_update.py")
@@ -59,7 +64,7 @@ def check_package(pkg: str, project: str, apiurl: str, anitya_distro: str) -> di
     result = subprocess.run(
         [sys.executable, LAST_UPDATE_PY, pkg, "-m", "-p", project,
          "--apiurl", apiurl, "--anitya-distro", anitya_distro],
-        capture_output=True, text=True,
+        capture_output=True, text=True, check=False
     )
     if result.returncode != 0:
         return None
@@ -71,8 +76,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("-p", "--project", default="openSUSE:Factory",
                          help="project to sample from [default: openSUSE:Factory]")
     parser.add_argument("--apiurl", default=OBSAPIURL)
-    parser.add_argument("-n", "--count", type=int, default=10,
-                         help="how many outdated packages to find [default: 10]")
+    parser.add_argument("-n", "--count", type=int, default=20,
+                         help="how many outdated packages to find [default: 20]")
     parser.add_argument("--min-age-days", type=int, default=60,
                          help="only consider packages untouched for at least this "
                               "many days [default: 60]")
@@ -83,8 +88,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main() -> int:
-    args = parse_args()
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     if not cli_tools_installed():
         print("Error: missing required tool 'osc' or 'rpmspec'.", file=sys.stderr)
         return 1
@@ -101,15 +106,17 @@ def main() -> int:
         info = check_package(pkg, args.project, args.apiurl, args.anitya_distro)
         if info and info["upstream_newer"] and not has_pending_request(osc_cmd, args.project, pkg):
             outdated.append((pkg, info["version"], info["upstream_version"]))
+            cols = shutil.get_terminal_size((80, 20)).columns
+            print(f"\r{' ' * (cols - 1)}\r", end="", file=sys.stderr, flush=True)
+            print(f"{pkg}: {info['version']} -> {info['upstream_version']}", flush=True)
+            if len(outdated) >= args.count:
+                break
     print(file=sys.stderr)  # end the progress line
 
     if not outdated:
         print("No outdated candidates found.")
         return 0
 
-    print(f"\n{len(outdated)} outdated package(s):")
-    for pkg, version, upstream in outdated:
-        print(f"  {pkg}: {version} -> {upstream}")
     if len(outdated) < args.count:
         print(f"\n(only found {len(outdated)}/{args.count}: ran out of packages in the "
               f"{args.min_age_days}-{args.max_age_days} day window)", file=sys.stderr)
